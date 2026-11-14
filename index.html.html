@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080d16">
+<title>Szombathely – időjárás és óra</title>
+<style>
+:root{color-scheme:dark;--fg:#f3f6fb;--muted:#aab6c8;--line:rgba(255,255,255,.12);--glass:rgba(255,255,255,.055)}
+*{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080d16;color:var(--fg);font-family:Inter,"Segoe UI",Arial,sans-serif}
+body{background:radial-gradient(ellipse at 78% 18%,rgba(35,78,115,.36),transparent 42%),radial-gradient(ellipse at 15% 85%,rgba(27,57,83,.24),transparent 45%),linear-gradient(135deg,#080d16,#101b2a 58%,#09111d)}
+#app{min-height:100%;height:100%;padding:5.2vh 6vw;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+.top{display:flex;justify-content:space-between;align-items:center;gap:24px}.location{font-size:clamp(20px,2vw,34px);font-weight:550;letter-spacing:.04em}.eyebrow{font-size:clamp(11px,1vw,16px);color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px}.live{font-size:clamp(12px,1vw,16px);color:#9fb2c8;letter-spacing:.12em}
+.main{display:grid;grid-template-columns:1.15fr .85fr;align-items:center;gap:5vw;flex:1;padding:3vh 0}.clock{font-size:clamp(88px,15vw,230px);font-weight:250;letter-spacing:-.075em;line-height:.95;font-variant-numeric:tabular-nums}.date{font-size:clamp(20px,2.1vw,34px);color:#c2ccda;margin-top:26px;font-weight:350;letter-spacing:.02em}
+.weather{border-left:1px solid var(--line);padding-left:5vw}.weather-main{display:flex;align-items:center;gap:25px}.icon{font-size:clamp(66px,8vw,120px);line-height:1;filter:drop-shadow(0 8px 22px rgba(0,0,0,.22))}.temp{font-size:clamp(76px,10vw,150px);font-weight:250;letter-spacing:-.07em;line-height:1}.condition{font-size:clamp(19px,2vw,30px);color:#d4deea;margin-top:16px}.details{display:flex;gap:28px;flex-wrap:wrap;color:var(--muted);font-size:clamp(14px,1.25vw,19px);margin-top:26px}.detail strong{color:#e8eef7;font-weight:500;margin-left:7px}
+.forecast{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;border-top:1px solid var(--line);padding-top:25px}.day{background:var(--glass);border:1px solid rgba(255,255,255,.045);border-radius:18px;padding:17px 12px;text-align:center;backdrop-filter:blur(8px)}.dayname{font-size:clamp(13px,1.2vw,18px);color:#b9c5d5}.dayicon{font-size:clamp(27px,3vw,43px);margin:12px 0}.temps{font-size:clamp(14px,1.25vw,19px);font-variant-numeric:tabular-nums}.temps span{color:#91a0b4;margin-left:8px}.footer{display:flex;justify-content:space-between;align-items:center;color:#8190a4;font-size:clamp(10px,.9vw,14px);padding-top:17px}.error{color:#f3c7a9}.small{font-size:clamp(12px,1vw,15px);color:var(--muted)}
+@media(max-aspect-ratio:1/1){#app{padding:4vh 5vw}.main{grid-template-columns:1fr;gap:4vh}.weather{border-left:0;border-top:1px solid var(--line);padding:3vh 0 0}.clock{font-size:22vw}.forecast{gap:5px}.day{padding:12px 3px;border-radius:12px}.details{gap:14px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top"><div><div class="eyebrow">Jó napot kívánunk</div><div class="location">SZOMBATHELY <span style="color:#8295ad">· MAGYARORSZÁG</span></div></div><div class="live" id="live">ÉLŐ ADATOK</div></header>
+  <main class="main">
+    <section><div class="clock" id="clock">--:--</div><div class="date" id="date">Dátum betöltése…</div></section>
+    <section class="weather"><div class="eyebrow">Jelenlegi időjárás</div><div class="weather-main"><div class="icon" id="icon">🌤️</div><div><div class="temp" id="temp">--°</div><div class="condition" id="condition">Adatok betöltése…</div></div></div><div class="details"><div>Hőérzet<strong id="feels">--°</strong></div><div>Szél<strong id="wind">-- km/h</strong></div><div>Páratartalom<strong id="humidity">--%</strong></div></div></section>
+  </main>
+  <section class="forecast" id="forecast"><div class="day"><div class="dayname">Előrejelzés</div><div class="dayicon">⌛</div><div class="small">Betöltés…</div></div></section>
+  <footer class="footer"><span id="updated">Időjárási adatok: Open-Meteo</span><span>Frissítés 15 percenként</span></footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const huDate=new Intl.DateTimeFormat('hu-HU',{timeZone:'Europe/Budapest',weekday:'long',year:'numeric',month:'long',day:'numeric'});
+function tick(){const now=new Date();$('clock').textContent=new Intl.DateTimeFormat('hu-HU',{timeZone:'Europe/Budapest',hour:'2-digit',minute:'2-digit',hour12:false}).format(now);$('date').textContent=huDate.format(now).replace(/^./,c=>c.toLocaleUpperCase('hu-HU'));}
+tick();setInterval(tick,1000);
+function weatherInfo(code,isDay=true){if(code===0)return ['☀️','Derült'];if(code===1)return ['🌤️','Többnyire derült'];if(code===2)return ['⛅','Részben felhős'];if(code===3)return ['☁️','Borult'];if([45,48].includes(code))return ['🌫️','Ködös'];if([51,53,55,56,57].includes(code))return ['🌦️','Szitálás'];if([61,63,65,66,67,80,81,82].includes(code))return ['🌧️','Esős'];if([71,73,75,77,85,86].includes(code))return ['🌨️','Havas'];if([95,96,99].includes(code))return ['⛈️','Zivatar'];return [isDay?'🌤️':'🌙','Változó idő'];}
+const dayFmt=new Intl.DateTimeFormat('hu-HU',{timeZone:'Europe/Budapest',weekday:'short'});
+async function loadWeather(){try{const url='https://api.open-meteo.com/v1/forecast?latitude=47.2307&longitude=16.6218&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FBudapest&forecast_days=5';const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const d=await r.json(),c=d.current;const [ico,desc]=weatherInfo(c.weather_code,!!c.is_day);$('icon').textContent=ico;$('temp').textContent=Math.round(c.temperature_2m)+'°';$('condition').textContent=desc;$('feels').textContent=Math.round(c.apparent_temperature)+'°';$('wind').textContent=Math.round(c.wind_speed_10m)+' km/h';$('humidity').textContent=Math.round(c.relative_humidity_2m)+'%';$('forecast').innerHTML='';d.daily.time.forEach((date,i)=>{const [di,dd]=weatherInfo(d.daily.weather_code[i]);const label=i===0?'Ma':dayFmt.format(new Date(date+'T12:00:00')).replace('.','');const el=document.createElement('div');el.className='day';el.innerHTML=`<div class="dayname">${label}</div><div class="dayicon">${di}</div><div class="temps">${Math.round(d.daily.temperature_2m_max[i])}° <span>${Math.round(d.daily.temperature_2m_min[i])}°</span></div>`;$('forecast').appendChild(el);});$('updated').textContent='Frissítve: '+new Intl.DateTimeFormat('hu-HU',{timeZone:'Europe/Budapest',hour:'2-digit',minute:'2-digit'}).format(new Date())+' · Forrás: Open-Meteo';$('live').textContent='ÉLŐ ADATOK';}catch(e){$('condition').textContent='Az időjárási adatok most nem érhetők el';$('live').textContent='KAPCSOLATRA VÁR';$('updated').textContent='Ellenőrizd az internetkapcsolatot · Az óra továbbra is működik';}}
+loadWeather();setInterval(loadWeather,15*60*1000);
+document.addEventListener('keydown',e=>{if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();}});
+</script>
+</body>
+</html>
